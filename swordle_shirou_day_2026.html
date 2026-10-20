@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SWORDLE — Shirou Day 2026</title>
+<style>
+  :root {
+    --bg: #1f2334;
+    --accent: #be523b;
+    --music: #b88c2d;
+    --green: #538d4e;
+    --yellow: #b59f3b;
+    --gray: #3a3a3c;
+    --border: #565b6b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* A very faint Shirou image behind the dark-blue page background. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(31, 35, 52, 0.88), rgba(31, 35, 52, 0.88)),
+      url("Shirou_Day_picture.jpg");
+    background-position: center, center;
+    background-size: cover, cover;
+    background-repeat: no-repeat;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) 100px;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #45495a;
+  }
+
+  #shirouPortrait {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 8px;
+  }
+
+  .headerTitle {
+    min-width: 0;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    letter-spacing: 4px;
+  }
+
+  header p {
+    color: #bbb;
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-bottom: 0;
+  }
+
+  #musicToggle {
+    justify-self: end;
+    background: var(--music);
+    color: white;
+    border: 0;
+    border-radius: 6px;
+    padding: 10px 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+  }
+
+  main {
+    max-width: 440px;
+    margin: auto;
+    padding: 16px;
+  }
+
+  #message {
+    min-height: 48px;
+    padding: 10px 4px;
+    font-weight: bold;
+    line-height: 1.5;
+  }
+
+  #board {
+    display: grid;
+    gap: 5px;
+    margin: 8px auto 16px;
+    max-width: 320px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+  }
+
+  .tile {
+    aspect-ratio: 1;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .correct {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .present {
+    background: var(--yellow);
+    border-color: var(--yellow);
+  }
+
+  .absent {
+    background: var(--gray);
+    border-color: var(--gray);
+  }
+
+  #keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 20px;
+  }
+
+  .keyrow {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .key {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    background: #818593;
+    color: white;
+    border: 0;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .key.wide {
+    flex: 1.5;
+    font-size: 11px;
+  }
+
+  .key.correct { background: var(--green); }
+  .key.present { background: var(--yellow); }
+  .key.absent { background: var(--gray); }
+
+  button:active {
+    transform: scale(.96);
+  }
+
+  #resultActions {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+
+  #resultActions.visible {
+    display: flex;
+  }
+
+  .actionButton {
+    background: var(--accent);
+    color: white;
+    border: 0;
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .actionButton:hover {
+    filter: brightness(1.15);
+  }
+
+  #specialCounter {
+    margin: 18px 0 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    line-height: 1.6;
+  }
+
+  #result {
+    white-space: pre-line;
+    line-height: 1.7;
+    color: #ddd;
+    margin: 15px 0;
+  }
+
+  footer {
+    padding: 24px;
+    color: #9296a5;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  @media (max-width: 400px) {
+    header {
+      grid-template-columns: 54px minmax(0, 1fr) 82px;
+      gap: 6px;
+      padding: 12px 8px;
+    }
+
+    #shirouPortrait {
+      width: 54px;
+      height: 54px;
+    }
+
+    h1 {
+      font-size: 23px;
+      letter-spacing: 2px;
+    }
+
+    header p {
+      font-size: 9px;
+      letter-spacing: 0;
+    }
+
+    #musicToggle {
+      font-size: 10px;
+      padding: 9px 5px;
+    }
+
+    .key { height: 43px; }
+
+    .actionButton { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img
+    id="shirouPortrait"
+    src="Shirou_Day_picture.jpg"
+    alt="Shirou Emiya"
+  >
+  <div class="headerTitle">
+    <h1>SWORDLE</h1>
+    <p>SHIROU DAY 2026 SPECIAL</p>
+  </div>
+  <button id="musicToggle" type="button">♫ MUSIC: OFF</button>
+</header>
+
+<main>
+  <p>Guess the five-letter word in six tries.</p>
+  <p style="color:#b7bac6;font-size:13px">
+    Green = correct · Yellow = wrong spot · Gray = nope
+  </p>
+
+  <div id="message" aria-live="polite">
+    Shirou is thinking of a word...
+  </div>
+
+  <div id="board"></div>
+  <div id="keyboard"></div>
+
+  <div id="specialCounter">
+    <strong>Secret messages discovered</strong>
+    <div id="counterText">0 / 13</div>
+    <small>
+      Can you find them all?<br>
+      (Secret message guesses will not count towards a guess made.)
+    </small>
+  </div>
+
+  <div id="result"></div>
+
+  <div id="resultActions">
+    <button id="restart" class="actionButton" type="button">PLAY AGAIN</button>
+    <button id="share" class="actionButton" type="button">SHARE RESULT</button>
+  </div>
+</main>
+
+<footer>
+  All rights to Type-Moon and respective owners. Happy Shirou Day!
+</footer>
+
+<audio id="bgm" src="Shirou_theme.mp3" loop preload="none"></audio>
+
+<script>
+const ANSWER = "SWORD";
+
+const SPECIALS = {
+  SHIRO: {
+    aliases: ["SHIRO"],
+    message: "Not enough letters, also incorrect. Think more about swords."
+  },
+  EMIYA: {
+    aliases: ["EMIYA"],
+    message: "Close. Hint: What does EMIYA use?"
+  },
+  IDEAL: {
+    aliases: ["IDEAL", "DREAM"],
+    message: "Shirou has this spiritually, but what about physically?"
+  },
+  ILLYA: {
+    aliases: ["ILLYA"],
+    message: "Close- think of what her brother uses."
+  },
+  SABER: {
+    aliases: ["SABER"],
+    message: "Close! What does Saber use in battle?"
+  },
+  SEIBA: {
+    aliases: ["SEIBA"],
+    message: "Food will be later! Think about swords now!"
+  },
+  GOLDY: {
+    aliases: ["GOLDY"],
+    message: "Incorrect. Hint: What did Shirou use to beat the King of Jobbers?"
+  },
+  NIGHT: {
+    aliases: ["NIGHT"],
+    message: "It is not your Fate to Stay, but it can still be about swords."
+  },
+  LANCE: {
+    aliases: ["LANCE", "SPEAR"],
+    message: "Incorrect. Hint: What did Saber use against the Blue Tights Man?"
+  },
+  RIDER: {
+    aliases: ["RIDER"],
+    message: "Incorrect. Hint: What did Salter use against Purple Snake Woman?"
+  },
+  GRAIL: {
+    aliases: ["KIREI", "GRAIL"],
+    message: "Yorokobe shounen/shoujo, your swords will finally come true."
+  },
+  SHERO: {
+    aliases: ["SHERO"],
+    message: "Ohohohoho! Try again, Sherou!"
+  },
+  BLADE: {
+    aliases: ["BLADE", "BLOOD", "WORKS", "STEEL", "TRACE", "HANDS"],
+    message: "Close, try again! Hint: Swords"
+  }
+};
+
+const TOTAL_SPECIALS = Object.keys(SPECIALS).length;
+const DEFAULT_WRONG = "Incorrect, try again. Hint: SWORD";
+const CORRECT_MESSAGE =
+  "Congratulations, you got it right! Happy Shirou Day 2026!";
+
+let guesses = [];
+let current = "";
+let finished = false;
+let won = false;
+let keyStates = {};
+let foundSpecials = new Set();
+
+const board = document.getElementById("board");
+const keyboard = document.getElementById("keyboard");
+const message = document.getElementById("message");
+const result = document.getElementById("result");
+const counterText = document.getElementById("counterText");
+const resultActions = document.getElementById("resultActions");
+const restartButton = document.getElementById("restart");
+const shareButton = document.getElementById("share");
+const musicToggle = document.getElementById("musicToggle");
+const bgm = document.getElementById("bgm");
+
+function init() {
+  board.innerHTML = "";
+  keyboard.innerHTML = "";
+
+  for (let i = 0; i < 6; i++) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    for (let j = 0; j < 5; j++) {
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      row.appendChild(tile);
+    }
+    board.appendChild(row);
+  }
+
+  const keyboardRows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+
+  keyboardRows.forEach((letters, index) => {
+    const row = document.createElement("div");
+    row.className = "keyrow";
+
+    if (index === 2) row.appendChild(makeKey("ENTER", "wide", submit));
+    for (const letter of letters) {
+      row.appendChild(makeKey(letter, "", () => type(letter)));
+    }
+    if (index === 2) row.appendChild(makeKey("⌫", "wide", erase));
+
+    keyboard.appendChild(row);
+  });
+
+  render();
+  updateCounter();
+}
+
+function makeKey(label, extraClass, action) {
+  const key = document.createElement("button");
+  key.type = "button";
+  key.className = "key " + extraClass;
+  key.textContent = label;
+  key.setAttribute("aria-label", label === "⌫" ? "Backspace" : label);
+  key.addEventListener("click", action);
+  return key;
+}
+
+function type(letter) {
+  if (finished || current.length >= 5) return;
+  current += letter;
+  render();
+}
+
+function erase() {
+  if (finished) return;
+  current = current.slice(0, -1);
+  render();
+}
+
+function submit() {
+  if (finished) return;
+
+  const guess = current.toUpperCase();
+  if (guess.length !== 5) {
+    say("Please enter five letters!");
+    return;
+  }
+
+  const special = Object.entries(SPECIALS).find(
+    ([, data]) => data.aliases.includes(guess)
+  );
+
+  if (special) {
+    const [id, data] = special;
+    foundSpecials.add(id);
+    current = "";
+    say(data.message);
+    updateCounter();
+    render();
+    return;
+  }
+
+  guesses.push(guess);
+  current = "";
+
+  if (guess === ANSWER) {
+    won = true;
+    finished = true;
+    say(CORRECT_MESSAGE);
+    showResult();
+  } else if (guesses.length >= 6) {
+    finished = true;
+    say("Out of guesses! The answer was SWORD.");
+    showResult();
+  } else {
+    say(DEFAULT_WRONG);
+  }
+
+  render();
+}
+
+function getColors(guess) {
+  const colors = Array(5).fill("absent");
+  const remaining = ANSWER.split("");
+
+  for (let i = 0; i < 5; i++) {
+    if (guess[i] === ANSWER[i]) {
+      colors[i] = "correct";
+      remaining[i] = null;
+    }
+  }
+
+  for (let i = 0; i < 5; i++) {
+    if (colors[i] === "correct") continue;
+    const index = remaining.indexOf(guess[i]);
+    if (index !== -1) {
+      colors[i] = "present";
+      remaining[index] = null;
+    }
+  }
+
+  return colors;
+}
+
+function render() {
+  for (let i = 0; i < 6; i++) {
+    const guess = guesses[i] || (i === guesses.length ? current : "");
+    const tiles = board.children[i].children;
+    const colors = i < guesses.length ? getColors(guesses[i]) : [];
+
+    for (let j = 0; j < 5; j++) {
+      tiles[j].textContent = guess[j] || "";
+      tiles[j].className = "tile";
+
+      if (i < guesses.length) {
+        tiles[j].classList.add(colors[j]);
+        updateKey(guess[j], colors[j]);
+      }
+    }
+  }
+}
+
+function updateKey(letter, color) {
+  if (!letter) return;
+  const priority = { absent: 1, present: 2, correct: 3 };
+
+  if (!keyStates[letter] || priority[color] > priority[keyStates[letter]]) {
+    keyStates[letter] = color;
+  }
+
+  document.querySelectorAll(".key").forEach(key => {
+    if (key.textContent === letter) {
+      key.classList.remove("absent", "present", "correct");
+      key.classList.add(keyStates[letter]);
+    }
+  });
+}
+
+function say(text) {
+  message.textContent = text;
+}
+
+function updateCounter() {
+  counterText.textContent = `${foundSpecials.size} / ${TOTAL_SPECIALS}`;
+}
+
+function showResult() {
+  const grid = guesses.map(guess =>
+    getColors(guess).map(color =>
+      color === "correct" ? "🟩" :
+      color === "present" ? "🟨" : "⬛"
+    ).join("")
+  ).join("\n");
+
+  result.textContent =
+    `SWORDLE ${won ? guesses.length : "X"}/6 ⚔️\n\n` +
+    grid +
+    `\n\nSecret messages: ${foundSpecials.size}/${TOTAL_SPECIALS}` +
+    "\nHappy Shirou Day 2026!";
+
+  resultActions.classList.add("visible");
+}
+
+async function shareResult() {
+  const text = result.textContent;
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "SWORDLE — Shirou Day 2026", text });
+    } else if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      say("Result copied to clipboard!");
+    } else {
+      window.prompt("Copy your SWORDLE result:", text);
+    }
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      window.prompt("Copy your SWORDLE result:", text);
+    }
+  }
+}
+
+function restart() {
+  guesses = [];
+  current = "";
+  finished = false;
+  won = false;
+  keyStates = {};
+  foundSpecials = new Set();
+  result.textContent = "";
+  resultActions.classList.remove("visible");
+  say("Shirou is thinking of a word...");
+  init();
+}
+
+musicToggle.addEventListener("click", async () => {
+  if (bgm.paused) {
+    try {
+      await bgm.play();
+      musicToggle.textContent = "♫ MUSIC: ON";
+    } catch (error) {
+      say("Couldn't play the music. Check that Shirou_theme.mp3 exists!");
+      musicToggle.textContent = "♫ MUSIC: OFF";
+    }
+  } else {
+    bgm.pause();
+    musicToggle.textContent = "♫ MUSIC: OFF";
+  }
+});
+
+restartButton.addEventListener("click", restart);
+shareButton.addEventListener("click", shareResult);
+
+document.addEventListener("keydown", event => {
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+  if (event.key === "Enter") submit();
+  else if (event.key === "Backspace") erase();
+  else if (/^[a-zA-Z]$/.test(event.key)) type(event.key.toUpperCase());
+});
+
+init();
+</script>
+</body>
+</html>
